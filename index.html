@@ -324,7 +324,7 @@
             <h2>Bienvenido al Sudoku</h2>
             <p>Por favor, introduce tu nombre antes de comenzar:</p>
             <input type="text" id="student-name" placeholder="Tu nombre...">
-            <button id="start-button">Comenzar</button>
+            <button type="button" onclick="iniciarJuego()" id="start-button">Comenzar</button>
         </div>
     </div>
     
@@ -407,13 +407,22 @@
             // Inicializar estructuras de datos
             initializeGrids();
             
+            console.log('Página cargada, configurando eventos...');
+            
             // Configurar eventos iniciales
-            document.getElementById('start-button').addEventListener('click', iniciarJuego);
+            document.getElementById('start-button').addEventListener('click', function() {
+                console.log('Botón de inicio pulsado');
+                iniciarJuego();
+            });
+            
             document.getElementById('student-name').addEventListener('keypress', function(e) {
                 if (e.key === 'Enter') {
+                    console.log('Tecla Enter pulsada en campo de nombre');
                     iniciarJuego();
                 }
             });
+            
+            console.log('Eventos configurados correctamente');
         };
         
         // Inicializar las estructuras de datos
@@ -1070,212 +1079,247 @@
                 context.fillStyle = '#ffffff';
                 context.fillRect(0, 0, width, height);
                 
-                // Título (sin logo)
-                context.font = 'bold 18px Arial';
-                context.fillStyle = '#2c3e50';
-                context.textAlign = 'center';
-                context.fillText('IES Serranía - Sudokus 6x6', width/2, 40);
-                context.textAlign = 'left';
+                // Añadir el logo
+                const logoImage = new Image();
+                // Añadir mensaje para depuración
+                console.log("Intentando cargar el logo desde:", "https://raw.githubusercontent.com/jalilan590-dot/sudoku6x6/refs/heads/main/serrania-logo-otro.png");
                 
-                // Obtener la dificultad para el nombre del archivo
-                const difficulty = document.getElementById('difficulty').value;
-                let difficultyText = 'Desconocido';
-                if (difficulty === 'easy') difficultyText = 'Facil';
-                if (difficulty === 'medium') difficultyText = 'Medio';
-                if (difficulty === 'hard') difficultyText = 'Dificil';
-                
-                // Crear un enlace para descargar
-                const link = document.createElement('a');
-                
-                // Configurar el nombre del archivo con el nombre del estudiante, dificultad y fecha
-                const cleanName = studentName.replace(/\s+/g, '_').replace(/[^\w]/g, '');
-                const dateStr = new Date().toISOString().slice(0,10);
-                link.download = `sudoku_${cleanName}_${difficultyText}_${dateStr}.png`;
-                
-                // Dibujar nombre del estudiante, fecha y dificultad
-                const startY = 90;
-                context.fillStyle = '#2c3e50';
-                context.font = 'bold 16px Arial';
-                context.fillText(`Estudiante: ${studentName}`, 10, startY);
-                context.fillText(`Fecha: ${new Date().toLocaleDateString()}`, 10, startY + 25);
-                context.fillText(`Dificultad: ${difficultyText}`, 10, startY + 50);
-                
-                // Obtener y mostrar el tiempo total
-                const now = new Date();
-                const totalElapsedSeconds = Math.floor((now - startTime) / 1000);
-                const totalMinutes = Math.floor(totalElapsedSeconds / 60);
-                const totalSeconds = totalElapsedSeconds % 60;
-                const totalTimeString = `${totalMinutes}:${totalSeconds.toString().padStart(2, '0')}`;
-                
-                context.fillText(`Tiempo total: ${totalTimeString}`, 10, startY + 75);
-                
-                // Dibujar el sudoku manualmente
-                const cellSize = 50;
-                const gridTop = startY + 100;
-                context.strokeStyle = '#2c3e50';
-                context.lineWidth = 2;
-                
-                // Dibujar la cuadrícula
-                context.beginPath();
-                for (let i = 0; i <= 6; i++) {
-                    // Líneas verticales
-                    const lineWidth = (i % 3 === 0) ? 3 : 1;
-                    context.lineWidth = lineWidth;
-                    context.moveTo(i * cellSize + 10, gridTop);
-                    context.lineTo(i * cellSize + 10, gridTop + 6 * cellSize);
+                logoImage.onload = function() {
+                    console.log("Logo cargado con éxito");
+                    // Dibujar el logo (centrado en la parte superior)
+                    const logoWidth = 100; // Ancho ajustado del logo
+                    const logoHeight = (logoWidth * logoImage.height) / logoImage.width; // Mantener proporción
                     
-                    // Líneas horizontales
-                    const lineWidthH = (i % 2 === 0) ? 3 : 1;
-                    context.lineWidth = lineWidthH;
-                    context.moveTo(10, gridTop + i * cellSize);
-                    context.lineTo(10 + 6 * cellSize, gridTop + i * cellSize);
-                }
-                context.stroke();
+                    context.drawImage(logoImage, (width - logoWidth) / 2, 10, logoWidth, logoHeight);
+                    
+                    // Título
+                    context.font = 'bold 18px Arial';
+                    context.fillStyle = '#2c3e50';
+                    context.textAlign = 'center';
+                    context.fillText('IES Serranía - Sudokus 6x6', width/2, logoHeight + 30);
+                    context.textAlign = 'left';
+                    
+                    // Continuar con el resto del proceso de descarga
+                    finishImageRender();
+                };
                 
-                // Dibujar números
-                context.font = '24px Arial';
-                context.textAlign = 'center';
-                context.textBaseline = 'middle';
+                logoImage.onerror = function() {
+                    console.error("No se pudo cargar el logo para la imagen descargada");
+                    // Título sin logo
+                    context.font = 'bold 18px Arial';
+                    context.fillStyle = '#2c3e50';
+                    context.textAlign = 'center';
+                    context.fillText('IES Serranía - Sudokus 6x6', width/2, 40);
+                    context.textAlign = 'left';
+                    
+                    // Continuar con el resto del proceso de descarga
+                    finishImageRender();
+                };
                 
-                for (let row = 0; row < 6; row++) {
-                    for (let col = 0; col < 6; col++) {
-                        if (sudokuGrid[row][col] !== 0) {
-                            // Dibujar fondo para números fijos
-                            const cellElement = document.querySelector(`div.cell[data-row="${row}"][data-col="${col}"]`);
-                            if (cellElement && cellElement.classList.contains('fixed')) {
-                                context.fillStyle = '#ecf0f1';
-                                context.fillRect(col * cellSize + 11, gridTop + row * cellSize + 1, cellSize - 2, cellSize - 2);
-                            } 
-                            // Dibujar fondo para números experimentales
-                            else if (cellElement && cellElement.classList.contains('experimental')) {
-                                context.fillStyle = '#f5eef8';
-                                context.fillRect(col * cellSize + 11, gridTop + row * cellSize + 1, cellSize - 2, cellSize - 2);
-                            }
-                            
-                            // Dibujar el número
-                            if (cellElement && cellElement.classList.contains('fixed')) {
-                                context.fillStyle = '#2c3e50'; // Color para números fijos
-                                context.font = 'bold 24px Arial';
-                            } else if (cellElement && cellElement.classList.contains('experimental')) {
-                                context.fillStyle = '#9b59b6'; // Color para números experimentales
-                                context.font = '24px Arial';
-                            } else {
-                                context.fillStyle = '#333'; // Color para números normales
-                                context.font = '24px Arial';
-                            }
-                            context.fillText(sudokuGrid[row][col], col * cellSize + 10 + cellSize / 2, gridTop + row * cellSize + cellSize / 2);
-                        }
+                // Cargar la imagen del logo
+                logoImage.src = "https://raw.githubusercontent.com/jalilan590-dot/sudoku6x6/refs/heads/main/serrania-logo-otro.png";
+                
+                function finishImageRender() {
+                    // Obtener la dificultad para el nombre del archivo
+                    const difficulty = document.getElementById('difficulty').value;
+                    let difficultyText = 'Desconocido';
+                    if (difficulty === 'easy') difficultyText = 'Facil';
+                    if (difficulty === 'medium') difficultyText = 'Medio';
+                    if (difficulty === 'hard') difficultyText = 'Dificil';
+                    
+                    // Crear un enlace para descargar
+                    const link = document.createElement('a');
+                    
+                    // Configurar el nombre del archivo con el nombre del estudiante, dificultad y fecha
+                    const cleanName = studentName.replace(/\s+/g, '_').replace(/[^\w]/g, '');
+                    const dateStr = new Date().toISOString().slice(0,10);
+                    link.download = `sudoku_${cleanName}_${difficultyText}_${dateStr}.png`;
+                    
+                    // Dibujar nombre del estudiante, fecha y dificultad
+                    const startY = 120; // Aumentado para dejar espacio al logo
+                    context.fillStyle = '#2c3e50';
+                    context.font = 'bold 16px Arial';
+                    context.fillText(`Estudiante: ${studentName}`, 10, startY);
+                    context.fillText(`Fecha: ${new Date().toLocaleDateString()}`, 10, startY + 25);
+                    context.fillText(`Dificultad: ${difficultyText}`, 10, startY + 50);
+                    
+                    // Obtener y mostrar el tiempo total
+                    const now = new Date();
+                    const totalElapsedSeconds = Math.floor((now - startTime) / 1000);
+                    const totalMinutes = Math.floor(totalElapsedSeconds / 60);
+                    const totalSeconds = totalElapsedSeconds % 60;
+                    const totalTimeString = `${totalMinutes}:${totalSeconds.toString().padStart(2, '0')}`;
+                    
+                    context.fillText(`Tiempo total: ${totalTimeString}`, 10, startY + 75);
+                    
+                    // Dibujar el sudoku manualmente
+                    const cellSize = 50;
+                    const gridTop = startY + 100;
+                    context.strokeStyle = '#2c3e50';
+                    context.lineWidth = 2;
+                    
+                    // Dibujar la cuadrícula
+                    context.beginPath();
+                    for (let i = 0; i <= 6; i++) {
+                        // Líneas verticales
+                        const lineWidth = (i % 3 === 0) ? 3 : 1;
+                        context.lineWidth = lineWidth;
+                        context.moveTo(i * cellSize + 10, gridTop);
+                        context.lineTo(i * cellSize + 10, gridTop + 6 * cellSize);
                         
-                        // Dibujar anotaciones si existen
-                        const cellElement = document.querySelector(`div.cell[data-row="${row}"][data-col="${col}"]`);
-                        if (cellElement) {
-                            const annotationContainer = cellElement.querySelector('.annotations');
-                            
-                            if (annotationContainer && sudokuGrid[row][col] === 0) {
-                                context.font = '12px Arial';
-                                context.fillStyle = '#7f8c8d';
+                        // Líneas horizontales
+                        const lineWidthH = (i % 2 === 0) ? 3 : 1;
+                        context.lineWidth = lineWidthH;
+                        context.moveTo(10, gridTop + i * cellSize);
+                        context.lineTo(10 + 6 * cellSize, gridTop + i * cellSize);
+                    }
+                    context.stroke();
+                    
+                    // Dibujar números
+                    context.font = '24px Arial';
+                    context.textAlign = 'center';
+                    context.textBaseline = 'middle';
+                    
+                    for (let row = 0; row < 6; row++) {
+                        for (let col = 0; col < 6; col++) {
+                            if (sudokuGrid[row][col] !== 0) {
+                                // Dibujar fondo para números fijos
+                                const cellElement = document.querySelector(`div.cell[data-row="${row}"][data-col="${col}"]`);
+                                if (cellElement && cellElement.classList.contains('fixed')) {
+                                    context.fillStyle = '#ecf0f1';
+                                    context.fillRect(col * cellSize + 11, gridTop + row * cellSize + 1, cellSize - 2, cellSize - 2);
+                                } 
+                                // Dibujar fondo para números experimentales
+                                else if (cellElement && cellElement.classList.contains('experimental')) {
+                                    context.fillStyle = '#f5eef8';
+                                    context.fillRect(col * cellSize + 11, gridTop + row * cellSize + 1, cellSize - 2, cellSize - 2);
+                                }
                                 
-                                for (let i = 0; i < 6; i++) {
-                                    if (annotationsGrid[row][col][i]) {
-                                        const annotX = col * cellSize + 10 + (i % 3) * (cellSize / 3) + cellSize / 6;
-                                        const annotY = gridTop + row * cellSize + Math.floor(i / 3) * (cellSize / 2) + cellSize / 4;
-                                        context.fillText(i + 1, annotX, annotY);
+                                // Dibujar el número
+                                if (cellElement && cellElement.classList.contains('fixed')) {
+                                    context.fillStyle = '#2c3e50'; // Color para números fijos
+                                    context.font = 'bold 24px Arial';
+                                } else if (cellElement && cellElement.classList.contains('experimental')) {
+                                    context.fillStyle = '#9b59b6'; // Color para números experimentales
+                                    context.font = '24px Arial';
+                                } else {
+                                    context.fillStyle = '#333'; // Color para números normales
+                                    context.font = '24px Arial';
+                                }
+                                context.fillText(sudokuGrid[row][col], col * cellSize + 10 + cellSize / 2, gridTop + row * cellSize + cellSize / 2);
+                            }
+                            
+                            // Dibujar anotaciones si existen
+                            const cellElement = document.querySelector(`div.cell[data-row="${row}"][data-col="${col}"]`);
+                            if (cellElement) {
+                                const annotationContainer = cellElement.querySelector('.annotations');
+                                
+                                if (annotationContainer && sudokuGrid[row][col] === 0) {
+                                    context.font = '12px Arial';
+                                    context.fillStyle = '#7f8c8d';
+                                    
+                                    for (let i = 0; i < 6; i++) {
+                                        if (annotationsGrid[row][col][i]) {
+                                            const annotX = col * cellSize + 10 + (i % 3) * (cellSize / 3) + cellSize / 6;
+                                            const annotY = gridTop + row * cellSize + Math.floor(i / 3) * (cellSize / 2) + cellSize / 4;
+                                            context.fillText(i + 1, annotX, annotY);
+                                        }
                                     }
                                 }
                             }
                         }
                     }
-                }
-                
-                // Añadir información de la solución
-                let isComplete = true;
-                for (let row = 0; row < 6; row++) {
-                    for (let col = 0; col < 6; col++) {
-                        if (sudokuGrid[row][col] === 0) {
-                            isComplete = false;
-                            break;
-                        }
-                    }
-                    if (!isComplete) break;
-                }
-                
-                if (isComplete) {
-                    // Verificar si es correcto
-                    let isCorrect = true;
-                    let errorCount = 0;
+                    
+                    // Añadir información de la solución
+                    let isComplete = true;
                     for (let row = 0; row < 6; row++) {
                         for (let col = 0; col < 6; col++) {
-                            if (sudokuGrid[row][col] !== solutionGrid[row][col]) {
-                                isCorrect = false;
-                                errorCount++;
+                            if (sudokuGrid[row][col] === 0) {
+                                isComplete = false;
+                                break;
                             }
                         }
+                        if (!isComplete) break;
                     }
                     
-                    if (isCorrect) {
-                        context.fillStyle = '#27ae60';
-                        context.font = '16px Arial';
-                        context.fillText('¡Solución correcta!', width / 2, gridTop + 6 * cellSize + 25);
-                    } else {
-                        context.fillStyle = '#e74c3c';
-                        context.font = '16px Arial';
-                        context.fillText(`Solución con ${errorCount} errores`, width / 2, gridTop + 6 * cellSize + 25);
-                    }
-                } else {
-                    context.fillStyle = '#7f8c8d';
-                    context.font = '16px Arial';
-                    context.fillText('Solución incompleta', width / 2, gridTop + 6 * cellSize + 25);
-                }
-                
-                // Dibujar el historial de verificaciones
-                context.font = 'bold 16px Arial';
-                context.fillStyle = '#2c3e50';
-                context.textAlign = 'left';
-                context.fillText('Historial de verificaciones:', 10, gridTop + 6 * cellSize + 60);
-                
-                // Ordenar las verificaciones cronológicamente (las más antiguas primero)
-                const sortedVerifications = [...verificationHistory].sort(function(a, b) {
-                    return a.timestamp - b.timestamp;
-                });
-                
-                // Mostrar hasta 10 verificaciones
-                const maxEntries = Math.min(sortedVerifications.length, 10);
-                
-                if (sortedVerifications.length === 0) {
-                    context.font = '14px Arial';
-                    context.fillStyle = '#7f8c8d';
-                    context.fillText('No hay verificaciones registradas', 10, gridTop + 6 * cellSize + 85);
-                } else {
-                    context.font = '14px Arial';
-                    
-                    for (let i = 0; i < maxEntries; i++) {
-                        const v = sortedVerifications[i];
-                        let entryText = '';
-                        
-                        if (v.isComplete && v.isCorrect) {
-                            context.fillStyle = '#27ae60';  // verde
-                            entryText = `${i+1}. Tiempo ${v.time} - Solución correcta`;
-                        } else if (v.isComplete) {
-                            context.fillStyle = '#e74c3c';  // rojo
-                            entryText = `${i+1}. Tiempo ${v.time} - ${v.errorCount} errores`;
-                        } else {
-                            context.fillStyle = '#7f8c8d';  // gris
-                            entryText = `${i+1}. Tiempo ${v.time} - Incompleto`;
+                    if (isComplete) {
+                        // Verificar si es correcto
+                        let isCorrect = true;
+                        let errorCount = 0;
+                        for (let row = 0; row < 6; row++) {
+                            for (let col = 0; col < 6; col++) {
+                                if (sudokuGrid[row][col] !== solutionGrid[row][col]) {
+                                    isCorrect = false;
+                                    errorCount++;
+                                }
+                            }
                         }
                         
-                        context.fillText(entryText, 10, gridTop + 6 * cellSize + 85 + (i * 25));
+                        if (isCorrect) {
+                            context.fillStyle = '#27ae60';
+                            context.font = '16px Arial';
+                            context.fillText('¡Solución correcta!', width / 2, gridTop + 6 * cellSize + 25);
+                        } else {
+                            context.fillStyle = '#e74c3c';
+                            context.font = '16px Arial';
+                            context.fillText(`Solución con ${errorCount} errores`, width / 2, gridTop + 6 * cellSize + 25);
+                        }
+                    } else {
+                        context.fillStyle = '#7f8c8d';
+                        context.font = '16px Arial';
+                        context.fillText('Solución incompleta', width / 2, gridTop + 6 * cellSize + 25);
                     }
+                    
+                    // Dibujar el historial de verificaciones
+                    context.font = 'bold 16px Arial';
+                    context.fillStyle = '#2c3e50';
+                    context.textAlign = 'left';
+                    context.fillText('Historial de verificaciones:', 10, gridTop + 6 * cellSize + 60);
+                    
+                    // Ordenar las verificaciones cronológicamente (las más antiguas primero)
+                    const sortedVerifications = [...verificationHistory].sort(function(a, b) {
+                        return a.timestamp - b.timestamp;
+                    });
+                    
+                    // Mostrar hasta 10 verificaciones
+                    const maxEntries = Math.min(sortedVerifications.length, 10);
+                    
+                    if (sortedVerifications.length === 0) {
+                        context.font = '14px Arial';
+                        context.fillStyle = '#7f8c8d';
+                        context.fillText('No hay verificaciones registradas', 10, gridTop + 6 * cellSize + 85);
+                    } else {
+                        context.font = '14px Arial';
+                        
+                        for (let i = 0; i < maxEntries; i++) {
+                            const v = sortedVerifications[i];
+                            let entryText = '';
+                            
+                            if (v.isComplete && v.isCorrect) {
+                                context.fillStyle = '#27ae60';  // verde
+                                entryText = `${i+1}. Tiempo ${v.time} - Solución correcta`;
+                            } else if (v.isComplete) {
+                                context.fillStyle = '#e74c3c';  // rojo
+                                entryText = `${i+1}. Tiempo ${v.time} - ${v.errorCount} errores`;
+                            } else {
+                                context.fillStyle = '#7f8c8d';  // gris
+                                entryText = `${i+1}. Tiempo ${v.time} - Incompleto`;
+                            }
+                            
+                            context.fillText(entryText, 10, gridTop + 6 * cellSize + 85 + (i * 25));
+                        }
+                    }
+                    
+                    // Generar la imagen y descargarla
+                    link.href = canvas.toDataURL('image/png');
+                    document.body.appendChild(link);
+                    link.click();
+                    
+                    // Eliminar el enlace después de descargar
+                    setTimeout(function() {
+                        document.body.removeChild(link);
+                    }, 100);
                 }
-                
-                // Generar la imagen y descargarla
-                link.href = canvas.toDataURL('image/png');
-                document.body.appendChild(link);
-                link.click();
-                
-                // Eliminar el enlace después de descargar
-                setTimeout(function() {
-                    document.body.removeChild(link);
-                }, 100);
                 
             } catch (error) {
                 console.error("Error al generar/descargar la imagen:", error);
