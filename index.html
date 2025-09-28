@@ -441,6 +441,7 @@
         
         // Función para iniciar el juego
         function iniciarJuego() {
+            console.log('Función iniciarJuego ejecutada');
             const nameInput = document.getElementById('student-name').value.trim();
             if (nameInput) {
                 studentName = nameInput;
@@ -448,6 +449,7 @@
                 document.getElementById('name-dialog').style.display = 'none';
                 setupEventListeners();
                 generateSudoku();
+                console.log('Juego iniciado con nombre:', studentName);
             } else {
                 alert('Por favor, introduce tu nombre para continuar.');
             }
