@@ -309,17 +309,48 @@
             font-size: 0.9em;
             color: #7f8c8d;
         }
+        /* Estilo para mensajes de diagnóstico */
+        .debug-info {
+            background-color: #f8f9fa;
+            border: 1px solid #ddd;
+            padding: 10px;
+            margin-top: 15px;
+            font-family: monospace;
+            font-size: 0.9em;
+            white-space: pre-wrap;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        .debug-container {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #fff;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .debug-title {
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #e74c3c;
+        }
     </style>
 </head>
 <body>
     <div class="header">
-        <img src="serrania-logo-otro.png" class="logo">
+        <!-- Alternativa 1: Usar la ruta relativa -->
+        <img src="serrania-logo-otro.png" class="logo" onerror="handleLogoError(this, 'header')">
         <h1>Generador de Sudokus 6x6 - Versión Educativa</h1>
+    </div>
+    
+    <div id="debug-container" class="debug-container" style="display: none;">
+        <div class="debug-title">Diagnóstico de Imagen:</div>
+        <div id="debug-info" class="debug-info"></div>
     </div>
     
     <div id="name-dialog">
         <div class="dialog-content">
-            <img src="serrania-logo-otro.png" alt="Logo IES Serranía" style="max-width: 150px; margin-bottom: 20px;">
+            <!-- Alternativa 2: Usar la ruta absoluta con origen en el documento actual -->
+            <img src="./serrania-logo-otro.png" alt="Logo IES Serranía" style="max-width: 150px; margin-bottom: 20px;" onerror="handleLogoError(this, 'dialog')">
             <h2>Bienvenido al Sudoku</h2>
             <p>Por favor, introduce tu nombre antes de comenzar:</p>
             <input type="text" id="student-name" placeholder="Tu nombre...">
@@ -393,8 +424,79 @@
         let currentMode = 'normal';
         let studentName = '';
         let verificationHistory = [];
-        let logoImage = new Image();
-        logoImage.src = 'serrania-logo-otro.png'; // Carga la imagen del logo de forma precargada
+        let logoLoadAttempts = 0;
+        let debugLog = [];
+        
+        // Manejador de errores para el logo
+        function handleLogoError(imgElement, location) {
+            logoLoadAttempts++;
+            
+            // Registrar error en el log
+            const timestamp = new Date().toLocaleTimeString();
+            const errorMsg = `[${timestamp}] Error al cargar logo en ${location}. Intento #${logoLoadAttempts}`;
+            debugLog.push(errorMsg);
+            
+            // Mostrar mensaje de diagnóstico
+            document.getElementById('debug-container').style.display = 'block';
+            document.getElementById('debug-info').textContent = debugLog.join('\n');
+            
+            // Intentar con rutas alternativas
+            if (logoLoadAttempts <= 3) {
+                const possiblePaths = [
+                    "serrania-logo-otro.png",  // Ruta relativa
+                    "./serrania-logo-otro.png", // Ruta relativa explícita
+                    "../serrania-logo-otro.png", // Un nivel arriba
+                    "img/serrania-logo-otro.png", // Carpeta img
+                    "images/serrania-logo-otro.png" // Carpeta images
+                ];
+                
+                const nextPath = possiblePaths[logoLoadAttempts % possiblePaths.length];
+                debugLog.push(`[${timestamp}] Intentando con ruta alternativa: ${nextPath}`);
+                imgElement.src = nextPath;
+            } else {
+                // Si todos los intentos fallan, reemplazar con texto
+                const container = imgElement.parentElement;
+                const logoText = document.createElement('div');
+                logoText.textContent = "IES SERRANÍA";
+                logoText.style.fontWeight = "bold";
+                logoText.style.fontSize = "18px";
+                logoText.style.color = "#2c3e50";
+                logoText.style.padding = "15px";
+                
+                container.replaceChild(logoText, imgElement);
+                debugLog.push(`[${timestamp}] Reemplazado logo por texto tras múltiples intentos fallidos`);
+            }
+            
+            // Actualizar log
+            document.getElementById('debug-info').textContent = debugLog.join('\n');
+        }
+        
+        // Función para mostrar información de depuración
+        function showDebugInfo() {
+            const paths = [
+                { path: "serrania-logo-otro.png", label: "Ruta relativa" },
+                { path: "./serrania-logo-otro.png", label: "Ruta relativa explícita" },
+                { path: "../serrania-logo-otro.png", label: "Un nivel arriba" }
+            ];
+            
+            for (const pathInfo of paths) {
+                const img = new Image();
+                img.onload = function() {
+                    debugLog.push(`Imagen cargada correctamente: ${pathInfo.path} (${pathInfo.label})`);
+                    document.getElementById('debug-info').textContent = debugLog.join('\n');
+                };
+                img.onerror = function() {
+                    debugLog.push(`Error al cargar: ${pathInfo.path} (${pathInfo.label})`);
+                    document.getElementById('debug-info').textContent = debugLog.join('\n');
+                };
+                img.src = pathInfo.path;
+            }
+            
+            // Información sobre la ubicación actual
+            const location = window.location.href;
+            debugLog.push(`URL actual: ${location}`);
+            document.getElementById('debug-info').textContent = debugLog.join('\n');
+        }
         
         // Dificultades (número de celdas que se muestran inicialmente)
         const difficulties = {
@@ -407,6 +509,10 @@
         window.onload = function() {
             // Inicializar estructuras de datos
             initializeGrids();
+            
+            // Mostrar información de depuración
+            document.getElementById('debug-container').style.display = 'block';
+            showDebugInfo();
             
             // Configurar eventos iniciales
             document.getElementById('start-button').addEventListener('click', iniciarJuego);
@@ -1069,6 +1175,13 @@
                 context.fillStyle = '#ffffff';
                 context.fillRect(0, 0, width, height);
                 
+                // Título (sin logo)
+                context.font = 'bold 18px Arial';
+                context.fillStyle = '#2c3e50';
+                context.textAlign = 'center';
+                context.fillText('IES Serranía - Sudokus 6x6', width/2, 40);
+                context.textAlign = 'left';
+                
                 // Obtener la dificultad para el nombre del archivo
                 const difficulty = document.getElementById('difficulty').value;
                 let difficultyText = 'Desconocido';
@@ -1083,21 +1196,6 @@
                 const cleanName = studentName.replace(/\s+/g, '_').replace(/[^\w]/g, '');
                 const dateStr = new Date().toISOString().slice(0,10);
                 link.download = `sudoku_${cleanName}_${difficultyText}_${dateStr}.png`;
-                
-                // Usar la imagen precargada si está disponible
-                if (logoImage.complete && logoImage.naturalHeight !== 0) {
-                    context.drawImage(logoImage, 20, 20, 150, 60);
-                    context.font = 'bold 16px Arial';
-                    context.fillStyle = '#2c3e50';
-                    context.fillText('IES Serranía - Sudokus 6x6', 180, 50);
-                } else {
-                    // Si hay un problema con la imagen, mostrar solo el título
-                    context.font = 'bold 18px Arial';
-                    context.fillStyle = '#2c3e50';
-                    context.textAlign = 'center';
-                    context.fillText('IES Serranía - Sudokus 6x6', width/2, 40);
-                    context.textAlign = 'left';
-                }
                 
                 // Dibujar nombre del estudiante, fecha y dificultad
                 const startY = 90;
