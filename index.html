@@ -470,6 +470,9 @@
             document.getElementById('check').addEventListener('click', checkSolution);
             document.getElementById('download').addEventListener('click', downloadImage);
             
+            // Regenerar sudoku cuando cambia la dificultad
+            document.getElementById('difficulty').addEventListener('change', generateSudoku);
+            
             // Modos de juego
             document.getElementById('normal-mode').addEventListener('click', function() {
                 setMode('normal');
