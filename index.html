@@ -105,8 +105,18 @@
             background-color: #f5eef8;
         }
         .error {
-            color: red;
+            color: #e74c3c !important;
+            background-color: #fde0dc !important;
+            box-shadow: inset 0 0 0 2px #e74c3c !important;
+            animation: pulse-error 1s infinite;
         }
+        
+        @keyframes pulse-error {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.03); }
+            100% { transform: scale(1); }
+        }
+        
         .completed {
             background-color: #d4f7d4;
         }
@@ -531,6 +541,9 @@
                         updateAnnotationDisplay(row, col);
                     }
                 }
+                
+                // Eliminar la clase de error cuando se modifica una celda
+                selectedCell.classList.remove('error');
             }
         }
         
@@ -558,6 +571,9 @@
                             updateAnnotationDisplay(row, col);
                         }
                     }
+                    
+                    // Eliminar la clase de error cuando se modifica una celda
+                    selectedCell.classList.remove('error');
                 } else if (e.key === 'Backspace' || e.key === 'Delete') {
                     const row = parseInt(selectedCell.getAttribute('data-row'));
                     const col = parseInt(selectedCell.getAttribute('data-col'));
@@ -573,6 +589,9 @@
                         }
                         updateAnnotationDisplay(row, col);
                     }
+                    
+                    // Eliminar la clase de error cuando se modifica una celda
+                    selectedCell.classList.remove('error');
                 }
             }
         }
@@ -1022,6 +1041,29 @@
                     }
                 }
             }
+            
+            // Verificar también si hay celdas que no coincidan con la solución
+            // Solo lo hacemos si estamos comprobando la solución completa
+            let isComplete = true;
+            for (let row = 0; row < 6; row++) {
+                for (let col = 0; col < 6; col++) {
+                    if (sudokuGrid[row][col] === 0) {
+                        isComplete = false;
+                        break;
+                    }
+                }
+                if (!isComplete) break;
+            }
+            
+            if (isComplete) {
+                for (let row = 0; row < 6; row++) {
+                    for (let col = 0; col < 6; col++) {
+                        if (sudokuGrid[row][col] !== solutionGrid[row][col]) {
+                            highlightCell(row, col);
+                        }
+                    }
+                }
+            }
         }
         
         // Resaltar una celda como errónea
@@ -1149,6 +1191,16 @@
                                 context.fillStyle = '#f5eef8';
                                 context.fillRect(col * cellSize + 11, gridTop + row * cellSize + 1, cellSize - 2, cellSize - 2);
                             }
+                            // Dibujar fondo para celdas con error
+                            else if (cellElement && cellElement.classList.contains('error')) {
+                                context.fillStyle = '#fde0dc';
+                                context.fillRect(col * cellSize + 11, gridTop + row * cellSize + 1, cellSize - 2, cellSize - 2);
+                                // Dibujar borde rojo para celdas con error
+                                context.strokeStyle = '#e74c3c';
+                                context.lineWidth = 2;
+                                context.strokeRect(col * cellSize + 11, gridTop + row * cellSize + 1, cellSize - 2, cellSize - 2);
+                                context.strokeStyle = '#2c3e50'; // Restaurar el color de trazo original
+                            }
                             
                             // Dibujar el número
                             if (cellElement && cellElement.classList.contains('fixed')) {
@@ -1156,6 +1208,9 @@
                                 context.font = 'bold 24px Arial';
                             } else if (cellElement && cellElement.classList.contains('experimental')) {
                                 context.fillStyle = '#9b59b6'; // Color para números experimentales
+                                context.font = '24px Arial';
+                            } else if (cellElement && cellElement.classList.contains('error')) {
+                                context.fillStyle = '#e74c3c'; // Color para números con error
                                 context.font = '24px Arial';
                             } else {
                                 context.fillStyle = '#333'; // Color para números normales
